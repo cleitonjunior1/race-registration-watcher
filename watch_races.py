@@ -129,18 +129,13 @@ def post_to_teams(webhook_url:str, title:str, text:str, link:str=None):
     except Exception as e:
         print("Falha Teams:", e)
 
-def send_email(cfg, subject, body):
-    host=cfg.get('SMTP_HOST'); to=cfg.get('ALERT_EMAIL_TO')
-    if not (host and to): return
-    import smtplib
-    from email.mime.text import MIMEText
-    msg = MIMEText(body, _charset="utf-8")
-    msg['Subject']=subject; msg['From']= cfg.get('SMTP_FROM') or cfg.get('SMTP_USER','bot@local'); msg['To']=to
-    with smtplib.SMTP(host, int(cfg.get('SMTP_PORT','587'))) as s:
-        s.starttls()
-        if cfg.get('SMTP_USER') and cfg.get('SMTP_PASS'):
-            s.login(cfg.get('SMTP_USER'), cfg.get('SMTP_PASS'))
-        s.sendmail(msg['From'], [to], msg.as_string())
+send_via_sendgrid(
+    os.environ.get("SENDGRID_API_KEY", ""),
+    os.environ.get("SMTP_FROM", "racebot@example.com"),
+    os.environ.get("ALERT_EMAIL_TO", ""),
+    title,
+    body
+)
 
 # ------------ Núcleo ------------
 def main():
@@ -229,3 +224,23 @@ def main():
 
 if __name__=="__main__":
     main()
+
+import requests
+
+def send_via_sendgrid(api_key, from_email, to_email, subject, body):
+    url = "https://api.sendgrid.com/v3/mail/send"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": from_email},
+        "subject": subject,
+        "content": [{"type": "text/plain", "value": body}]
+    }
+    resp = requests.post(url, headers=headers, json=data)
+    if resp.status_code >= 400:
+        print(f"Erro SendGrid: {resp.status_code} {resp.text}")
+    else:
+        print("E-mail enviado via SendGrid!")
