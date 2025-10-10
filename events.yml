@@ -1,0 +1,36 @@
+window_days: 45   # antecedência (em dias) para alerta quando uma DATA explícita for detectada
+dedupe_days: 7    # evita alertas repetidos por X dias para o mesmo motivo/link
+
+events:
+  - name: "Maratón de Mendoza"
+    urls:
+      - "https://maratondemendoza.com"   # página do evento (datas/infos) – base para 2026 também
+      - "https://maratondemendoza.com"  # regulamento
+    locale: "es"
+    keywords_any:   # dispare quando aparecerem estes termos
+      - "inscripción"
+      - "inscripciones"
+      - "inscripciones abiertas"
+      - "apertura de inscripciones"
+      - "registration open"
+      - "registration opens"
+      - "eventick"
+    keywords_block: # EVITE alertar se apenas indicar encerramento
+      - "inscripciones cerradas"
+      - "registration closed"
+
+  - name: "Patagonian International Marathon"
+    urls:
+      - "https://www.patagonianinternationalmarathon.com/en/registration"
+      - "https://www.patagonianinternationalmarathon.com/en/calendar"
+    locale: "en"
+    keywords_any:
+      - "registration open"
+      - "registration opens"
+      - "inscripciones abiertas"
+      - "apertura de inscripciones"
+      - "pre-sale"
+      - "preventa"
+    keywords_block:
+      - "registration has closed"
+      - "inscripciones han cerrado"
