@@ -2,7 +2,7 @@ name: Monitorar inscrições (Mendoza/Patagonian)
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # A cada 6 horas (ajuste como preferir)
+    - cron: "0 */6 * * *"   # A cada 6 horas
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,8 @@ jobs:
       - name: Instalar dependências
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml
+          pip install pyyaml jq==1.7.0 --no-deps || true
+          # Ubuntu já traz jq, o comando acima é só para garantir versão recente.
 
       - name: Executar checagem
         id: check
@@ -39,11 +40,16 @@ jobs:
           OUT_MD: alerts.md
         run: |
           python .github/scripts/check_registrations.py > result.json
-          echo "trigger=$(jq -r '.triggered' result.json)" >> $GITHUB_OUTPUT
-          echo "count=$(jq -r '.new_alerts_count' result.json)" >> $GITHUB_OUTPUT
-          echo "body<<'EOF'" >> $GITHUB_OUTPUT
-          cat alerts.html >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Exporta flags para próximos steps:
+          echo "trigger=$(jq -r '.triggered' result.json)" >> "$GITHUB_OUTPUT"
+          echo "count=$(jq -r '.new_alerts_count' result.json)" >> "$GITHUB_OUTPUT"
+
+          # Prepara o corpo HTML como output sem quebrar o YAML:
+          {
+            echo "body<<EOF"
+            cat alerts.html
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Salvar estado atualizado
         if: always()
@@ -72,4 +78,3 @@ jobs:
         run: |
           echo "---- RESULTADO ----"
           cat alerts.md
-``
