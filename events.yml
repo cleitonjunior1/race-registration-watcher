@@ -4,20 +4,34 @@ dedupe_days: 7    # evita alertas repetidos por X dias para o mesmo motivo/link
 events:
   - name: "Maratón de Mendoza"
     urls:
-      - "https://maratondemendoza.com"   # página do evento (datas/infos) – base para 2026 também
-      - "https://maratondemendoza.com"  # regulamento
+      - "https://maratondemendoza.com"        # home oficial (anúncios e links)
+      - "https://maratondemendoza.com/2025/"  # regulamento/edição atual; troque p/ /2026/ quando sair
     locale: "es"
-    keywords_any:   # dispare quando aparecerem estes termos
+    keywords_any:
       - "inscripción"
       - "inscripciones"
       - "inscripciones abiertas"
       - "apertura de inscripciones"
+      - "registro"
+      - "registración"
+      - "registro abierto"
+      - "abrir inscripciones"
+      - "abrimos inscripciones"
       - "registration open"
       - "registration opens"
       - "eventick"
-    keywords_block: # EVITE alertar se apenas indicar encerramento
+    keywords_block:
       - "inscripciones cerradas"
+      - "cerradas"
+      - "cupos agotados"
+      - "agotadas"
+      - "sold out"
+      - "inscripción cerrada"
       - "registration closed"
+      - "will open"
+      - "abrirá"
+      - "próximamente"
+      - "muy pronto"
 
   - name: "Patagonian International Marathon"
     urls:
@@ -26,11 +40,23 @@ events:
     locale: "en"
     keywords_any:
       - "registration open"
+      - "register here"
       - "registration opens"
+      - "pre-sale"
+      - "super pre-sale"
+      - "normal sale"
       - "inscripciones abiertas"
       - "apertura de inscripciones"
-      - "pre-sale"
       - "preventa"
+      - "súper preventa"
     keywords_block:
       - "registration has closed"
+      - "registration closed"
+      - "will open"
+      - "coming soon"
+      - "available soon"
       - "inscripciones han cerrado"
+      - "cerradas"
+      - "próximamente"
+      - "agotadas"
+      - "sold out"
