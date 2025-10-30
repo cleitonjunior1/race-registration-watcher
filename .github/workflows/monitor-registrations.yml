@@ -1,0 +1,75 @@
+name: Monitorar inscrições (Mendoza/Patagonian)
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # A cada 6 horas (ajuste como preferir)
+  workflow_dispatch:
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Tenta restaurar o estado (últimos alertas)
+      - name: Baixar estado anterior (se existir)
+        uses: actions/download-artifact@v4
+        with:
+          name: alert-state
+          path: .state
+        continue-on-error: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Executar checagem
+        id: check
+        env:
+          MONITOR_CONFIG: monitor.yml
+          STATE_PATH: .state/state.json
+          OUT_HTML: alerts.html
+          OUT_MD: alerts.md
+        run: |
+          python .github/scripts/check_registrations.py > result.json
+          echo "trigger=$(jq -r '.triggered' result.json)" >> $GITHUB_OUTPUT
+          echo "count=$(jq -r '.new_alerts_count' result.json)" >> $GITHUB_OUTPUT
+          echo "body<<'EOF'" >> $GITHUB_OUTPUT
+          cat alerts.html >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Salvar estado atualizado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alert-state
+          path: .state/state.json
+          retention-days: 60
+
+      - name: Enviar e-mail se houve alerta
+        if: ${{ steps.check.outputs.trigger == 'true' }}
+        uses: dawidd6/action-send-mail@v6
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: cleitonjunior1@gmail.com
+          from: "Bot Inscrições Corridas <${{ secrets.GMAIL_USERNAME }}>"
+          subject: "⚠️ Inscrições abertas (Mendoza/Patagonian 2026) — verifique!"
+          html_body: ${{ steps.check.outputs.body }}
+
+      - name: Publicar log em Markdown (opcional)
+        if: always()
+        run: |
+          echo "---- RESULTADO ----"
+          cat alerts.md
+``
